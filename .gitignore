@@ -1,0 +1,11 @@
+node_modules/
+
+# Other common ignores for Node.js projects:
+.env
+.env.local
+npm-debug.log*
+yarn-debug.log*
+coverage/
+*.log
+.DS_Store
+.vscode/ # Optional: if you don't want to commit VS Code workspace settings
