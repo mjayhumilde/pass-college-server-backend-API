@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 
+const postRouter = require("./routes/postRoute");
+
 // START EXPRESS APP
 const app = express();
 
@@ -9,11 +11,7 @@ app.use(cors()); // Enable CORS for all routes
 app.use(express.json()); // Enable parsing of JSON request bodies
 
 // 2) ROUTES
-app.get("/api/v1/post", (req, res) => {
-  res.send("Get All Post Types");
-});
-app.get("/api/v1/request", (req, res) => {
-  res.send("Get All Request Documents");
-});
+app.use("/api/v1/post", postRouter);
+// app.use("/api/v1/request");
 
 module.exports = app; // Export the app instance
