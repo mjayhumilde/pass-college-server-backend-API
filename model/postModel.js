@@ -70,6 +70,10 @@ const postSchema = new mongoose.Schema({
       message: "An event post must have an event time.",
     },
   },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 // Document Middleware

@@ -34,6 +34,10 @@ const documentSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 const Document = mongoose.model("Documents", documentSchema);
