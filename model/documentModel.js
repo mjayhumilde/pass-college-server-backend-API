@@ -5,40 +5,41 @@ const developmentUser = {
   course: "BSCS",
 };
 
-const documentSchema = new mongoose.Schema({
-  documentType: {
-    type: String,
-    required: [true, "a document request must have a type"],
-    index: true,
-    // add enum in the future
-  },
-  documentStatus: {
-    type: String,
-    default: "processing",
-    enum: ["processing", "ready-to-pickup", "pick-up"],
-    index: true,
-  },
-  user: {
-    name: {
+const documentSchema = new mongoose.Schema(
+  {
+    documentType: {
       type: String,
-      default: developmentUser.name,
-      required: true,
+      required: [true, "a document request must have a type"],
+      index: true,
+      // add enum in the future
     },
-    course: {
+    documentStatus: {
       type: String,
-      default: developmentUser.course,
-      required: true,
+      default: "processing",
+      enum: ["processing", "ready-to-pickup", "pick-up"],
+      index: true,
     },
-  }, //add populate in the future once user model is created
-  dateRequest: {
-    type: Date,
-    default: Date.now,
+    user: {
+      name: {
+        type: String,
+        default: developmentUser.name,
+        required: true,
+      },
+      course: {
+        type: String,
+        default: developmentUser.course,
+        required: true,
+      },
+    }, //add populate in the future once user model is created
+    dateRequest: {
+      type: Date,
+      default: Date.now,
+    },
   },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+  {
+    timestamps: true,
+  }
+);
 
 const Document = mongoose.model("Documents", documentSchema);
 
