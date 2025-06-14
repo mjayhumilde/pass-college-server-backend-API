@@ -1,0 +1,31 @@
+extends baseEmail
+
+block content
+  p Hi #{firstName},
+
+  p Welcome to Pass College! 🎉🙏
+
+  p Your account has been successfully created by the Pass College administration. You can now log in using the following credentials:
+  p
+    strong Email:
+    | #{email}
+  p
+    strong Default Password:
+    | #{defaultPassword}
+
+  p
+    strong For your security, please change this default password immediately after your first login.
+    | You can do this in your profile settings once you're logged in.
+
+  table.btn.btn-primary(role='presentation', border='0', cellpadding='0', cellspacing='0')
+    tbody
+      tr
+        td(align='left')
+          table(role='presentation', border='0', cellpadding='0', cellspacing='0')
+            tbody
+              tr
+                td
+                  a(href=`${url}`, target='_blank') Log in to your account
+
+  p If you need any help, please don't hesitate to contact or go to Pass College Admin Office.
+  p - Pass College Admin
