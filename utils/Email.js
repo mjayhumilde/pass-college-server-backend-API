@@ -1,5 +1,11 @@
 const nodemailer = require("nodemailer");
 const { htmlToText } = require("html-to-text");
+const pug = require("pug");
+const Mailjet = require("node-mailjet");
+const mailjet = new Mailjet({
+  apiKey: process.env.MJ_APIKEY_PUBLIC,
+  apiSecret: process.env.MJ_APIKEY_PRIVATE,
+});
 
 module.exports = class Email {
   constructor(user, url) {
@@ -80,8 +86,11 @@ module.exports = class Email {
     await this.newTransport().sendMail(mailOptions);
   }
 
-  async sendWelcome() {
-    await this.send("welcome", "Welcome to the Pass College Family!");
+  async sendWelcome(studentEmail, defaultPassword) {
+    await this.send("welcome", "Welcome to the Pass College Family!", {
+      email: studentEmail,
+      defaultPassword: defaultPassword,
+    });
   }
   async sendPasswordReset() {
     await this.send(
