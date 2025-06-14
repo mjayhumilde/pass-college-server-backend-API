@@ -68,11 +68,12 @@ module.exports = class Email {
     });
   }
 
-  async send(template, subject) {
+  async send(template, subject, templateData = {}) {
     const html = pug.renderFile(`${__dirname}/../views/email/${template}.pug`, {
       firstName: this.firstName,
       url: this.url,
       subject,
+      ...templateData, // spreads the email and defaultPassword into the Pug  Email Template
     });
 
     const mailOptions = {
@@ -92,10 +93,11 @@ module.exports = class Email {
       defaultPassword: defaultPassword,
     });
   }
-  async sendPasswordReset() {
+  async sendPasswordReset(resetToken) {
     await this.send(
       "passwordReset",
-      "Your password reset token (valid for 5mins)"
+      "Your password reset token (valid for 5mins)",
+      { token: resetToken }
     );
   }
 };
