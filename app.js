@@ -28,9 +28,9 @@ app.use("/api/v1/post", postRouter);
 app.use("/api/v1/document", documentRouter);
 app.use("/api/v1/user", userRouter);
 
-// catcht all undefined routes
-app.all("*", (req, res, next) => {
-  next(new AppError(`Can't find ${req.originalUrl}`, 404));
+// catcht all undefined routes || i using .use instead of .all because its crashing
+app.use((req, res, next) => {
+  next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
 });
 
 app.use(globalErrorHandler);
