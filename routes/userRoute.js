@@ -19,8 +19,8 @@ router.get("/me", userController.getMe, userController.getOneUser);
 // router.delete('/deleteMe', userController.deleteMe); // not needed here as of now
 router.patch(
   "/updateMe",
-  // userController.uploadUserPhoto,
-  // userController.resizeUserPhoto,   // this are needed if we have a user profile photo
+  userController.uploadUserPhoto,
+  userController.resizeUserPhoto,
   userController.updateMe
 );
 

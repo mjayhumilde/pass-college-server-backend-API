@@ -4,6 +4,56 @@ const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 const Email = require("../utils/Email");
 
+const multer = require("multer");
+const sharp = require("sharp");
+const path = require("path");
+const fs = require("fs");
+
+// === Multer Config for Users ===
+const multerStorage = multer.memoryStorage(); // keep in memory for sharp
+const multerFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith("image/")) {
+    cb(null, true);
+  } else {
+    cb(new AppError("Not an image! Please upload only images.", 400), false);
+  }
+};
+
+const upload = multer({
+  storage: multerStorage,
+  fileFilter: multerFilter,
+  limits: {
+    fileSize: 2 * 1024 * 1024, // 2MB per photo (profile pic usually small)
+  },
+});
+
+// Middleware to accept single file under "photo" field
+exports.uploadUserPhoto = upload.single("photo");
+
+// Ensure user photo dir exists
+const USER_IMG_DIR = path.join(__dirname, "..", "public", "img", "users");
+if (!fs.existsSync(USER_IMG_DIR))
+  fs.mkdirSync(USER_IMG_DIR, { recursive: true });
+
+// Resize + Save
+exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
+  if (!req.file) return next();
+
+  const filename = `user-${req.user.id}-${Date.now()}.jpeg`;
+  const outputPath = path.join(USER_IMG_DIR, filename);
+
+  await sharp(req.file.buffer)
+    .resize(500, 500) // square crop for profile pic
+    .toFormat("jpeg")
+    .jpeg({ quality: 90 })
+    .toFile(outputPath);
+
+  // Attach filename to req.body so updateMe can use it
+  req.body.photo = `public/img/users/${filename}`;
+
+  next();
+});
+
 const filterObject = (obj, ...allowedFields) => {
   const newObj = {};
   Object.keys(obj).forEach((el) => {
@@ -30,7 +80,13 @@ exports.updateMe = catchAsync(async (req, res, next) => {
   }
 
   // 2) Filtered out unwanted fields names
-  const filteredBody = filterObject(req.body, "firstName", "lastName", "email");
+  const filteredBody = filterObject(
+    req.body,
+    "firstName",
+    "lastName",
+    "email",
+    "photo"
+  );
 
   // 3) Update user document
   const updatedUser = await User.findByIdAndUpdate(req.user._id, filteredBody, {
