@@ -16,6 +16,9 @@ const app = express();
 app.use(cors()); // Enable CORS for all routes
 app.use(express.json()); // Enable parsing of JSON request bodies
 
+const path = require("path");
+app.use("/img", express.static(path.join(__dirname, "public", "img")));
+
 app.use(cookieParser());
 
 //DEVELOPMENT  logging

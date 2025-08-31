@@ -2,16 +2,33 @@ const express = require("express");
 const router = express.Router();
 
 const postController = require("../controller/postController");
+const authController = require("../controller/authController");
 
 router
   .route("/")
   .get(postController.getAllPost)
-  .post(postController.createPost);
+  .post(
+    authController.protect,
+    authController.restrictTo("teacher", "admin"),
+    postController.uploadPostImages,
+    postController.resizePostImages,
+    postController.createPost
+  );
 router
   .route("/:id")
   .get(postController.getPost)
-  .patch(postController.updatePost)
-  .delete(postController.deletePost);
+  .patch(
+    authController.protect,
+    authController.restrictTo("teacher", "admin"),
+    postController.uploadPostImages,
+    postController.resizePostImages,
+    postController.updatePost
+  )
+  .delete(
+    authController.protect,
+    authController.restrictTo("teacher", "admin"),
+    postController.deletePost
+  );
 
 // router.route("/:postType").get(postController);
 
