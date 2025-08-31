@@ -3,6 +3,8 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const morgan = require("morgan");
 
+const globalErrorHandler = require("./controller/errorController");
+const AppError = require("./utils/appError");
 const postRouter = require("./routes/postRoute");
 const documentRouter = require("./routes/documentRoute");
 const userRouter = require("./routes/userRoute");
@@ -25,5 +27,7 @@ if (process.env.NODE_ENV === "development") {
 app.use("/api/v1/post", postRouter);
 app.use("/api/v1/document", documentRouter);
 app.use("/api/v1/user", userRouter);
+
+app.use(globalErrorHandler);
 
 module.exports = app; // Export the app instance
