@@ -49,7 +49,7 @@ exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
     .toFile(outputPath);
 
   // Attach filename to req.body so updateMe can use it
-  req.body.photo = `public/img/users/${filename}`;
+  req.body.photo = `/img/users/${filename}`;
 
   next();
 });
@@ -84,6 +84,7 @@ exports.updateMe = catchAsync(async (req, res, next) => {
     req.body,
     "firstName",
     "lastName",
+    "course",
     "email",
     "photo"
   );
