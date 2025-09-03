@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema(
     },
     course: {
       type: String,
-      enum: ["BSCS", "BSA", "BSBA", "BSHM", "BSTM"],
+      enum: ["BSCS", "BSA", "BSBA", "BSHM", "BSTM", "BSCRIM", "BEED"],
     },
     email: {
       type: String,
