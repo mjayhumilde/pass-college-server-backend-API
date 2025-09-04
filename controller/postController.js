@@ -8,6 +8,7 @@ const Post = require("../model/postModel");
 const factory = require("../controller/handlerFactory");
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
+const APIFeatures = require("../utils/apiFeatures");
 
 // === Multer config ===
 const multerStorage = multer.memoryStorage();
@@ -59,8 +60,42 @@ exports.resizePostImages = catchAsync(async (req, res, next) => {
   next();
 });
 
+exports.getAllPost = catchAsync(async (req, res, next) => {
+  let filter = {};
+
+  console.log(req.user);
+
+  // If the user is not authenticated, only allow 'news', 'events', 'careers' posts
+  if (!req.user) {
+    filter = {
+      postType: { $in: ["news", "events", "careers"] }, // Filter to only allow specific post types for unauthenticated users
+    };
+  }
+
+  // If the user is authenticated, allow access to all posts
+  if (req.user) {
+    filter = {}; // No filter, show all posts for authenticated users
+  }
+
+  // Use APIFeatures to handle query building for sorting, filtering, pagination, etc.
+  const features = new APIFeatures(Post.find(filter), req.query)
+    .filter()
+    .sort()
+    .limitFields()
+    .paginate();
+
+  const posts = await features.query;
+
+  res.status(200).json({
+    status: "success",
+    results: posts.length,
+    data: {
+      posts,
+    },
+  });
+});
+
 // CRUD (factory pattern)
-exports.getAllPost = factory.getAll(Post);
 exports.createPost = factory.createOne(Post);
 exports.deletePost = factory.deleteOne(Post);
 exports.updatePost = factory.updateOne(Post);

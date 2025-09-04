@@ -6,7 +6,7 @@ const authController = require("../controller/authController");
 
 router
   .route("/")
-  .get(postController.getAllPost)
+  .get(authController.checkIfUserExist, postController.getAllPost)
   .post(
     authController.protect,
     authController.restrictTo("teacher", "admin"),
