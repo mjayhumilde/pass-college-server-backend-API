@@ -63,21 +63,11 @@ exports.resizePostImages = catchAsync(async (req, res, next) => {
 exports.getAllPost = catchAsync(async (req, res, next) => {
   let filter = {};
 
-  console.log(req.user);
-
-  // If the user is not authenticated, only allow 'news', 'events', 'careers' posts
+  // If no authenticated user, limit what we return
   if (!req.user) {
-    filter = {
-      postType: { $in: ["news", "events", "careers"] }, // Filter to only allow specific post types for unauthenticated users
-    };
+    filter = { postType: { $in: ["news", "events", "careers"] } };
   }
 
-  // If the user is authenticated, allow access to all posts
-  if (req.user) {
-    filter = {}; // No filter, show all posts for authenticated users
-  }
-
-  // Use APIFeatures to handle query building for sorting, filtering, pagination, etc.
   const features = new APIFeatures(Post.find(filter), req.query)
     .filter()
     .sort()
@@ -89,9 +79,7 @@ exports.getAllPost = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: "success",
     results: posts.length,
-    data: {
-      posts,
-    },
+    data: { posts },
   });
 });
 
