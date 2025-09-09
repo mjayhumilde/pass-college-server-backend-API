@@ -31,6 +31,11 @@ app.use("/api/v1/post", postRouter);
 app.use("/api/v1/document", documentRouter);
 app.use("/api/v1/user", userRouter);
 
+// default route
+app.get("/", (req, res) => {
+  res.send("Welcome to the Pass College Server API!");
+});
+
 // catcht all undefined routes || i using .use instead of .all because its crashing
 app.use((req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
