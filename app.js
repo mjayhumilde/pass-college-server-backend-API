@@ -36,6 +36,8 @@ app.get("/", (req, res) => {
   res.send("Welcome to the Pass College Server API!");
 });
 
+app.get("/favicon.ico", (req, res) => res.status(204).end());
+
 // catcht all undefined routes || i using .use instead of .all because its crashing
 app.use((req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
