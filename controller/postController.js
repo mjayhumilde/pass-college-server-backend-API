@@ -1,14 +1,12 @@
-const path = require("path");
-const fs = require("fs");
 const crypto = require("crypto");
 const multer = require("multer");
-const sharp = require("sharp");
 
 const Post = require("../model/postModel");
 const factory = require("../controller/handlerFactory");
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 const APIFeatures = require("../utils/apiFeatures");
+const cloudinary = require("../utils/cloudinary");
 
 // === Multer config ===
 const multerStorage = multer.memoryStorage();
@@ -31,30 +29,36 @@ exports.uploadPostImages = upload.fields([
   { name: "images", maxCount: Number(process.env.POST_MAX_IMAGES || 10) },
 ]);
 
-// Ensure output dir exists once
-const IMAGES_DIR = path.join(__dirname, "..", "public", "img", "posts");
-if (!fs.existsSync(IMAGES_DIR)) fs.mkdirSync(IMAGES_DIR, { recursive: true });
-
-// save images; attach filenames to req.body.images
+// Upload images to Cloudinary
 exports.resizePostImages = catchAsync(async (req, res, next) => {
   if (!req.files || !req.files.images || req.files.images.length === 0)
     return next();
 
   req.body.images = [];
 
-  // Process sequentially to reduce CPU spikes
   for (let i = 0; i < req.files.images.length; i++) {
     const file = req.files.images[i];
-    const filename = `post-${Date.now()}-${crypto.randomUUID()}.jpeg`;
-    const outputPath = path.join(IMAGES_DIR, filename);
+    const filename = `post-${Date.now()}-${crypto.randomUUID()}`;
 
-    await sharp(file.buffer)
-      .toFormat("jpeg")
-      .jpeg({ quality: 85, mozjpeg: true })
-      .toFile(outputPath);
+    // Upload buffer to Cloudinary
+    const uploadResult = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: "posts",
+          public_id: filename,
+          format: "jpeg",
+          transformation: [{ width: 1200, crop: "limit" }], // limit size, keep aspect ratio
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      stream.end(file.buffer);
+    });
 
-    // Save relative URL you can serve in React
-    req.body.images.push(`/img/posts/${filename}`);
+    // Save secure URL in DB
+    req.body.images.push(uploadResult.secure_url);
   }
 
   next();

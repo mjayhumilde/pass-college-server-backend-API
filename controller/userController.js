@@ -5,12 +5,10 @@ const catchAsync = require("../utils/catchAsync");
 const Email = require("../utils/Email");
 
 const multer = require("multer");
-const sharp = require("sharp");
-const path = require("path");
-const fs = require("fs");
+const cloudinary = require("../utils/cloudinary");
 
 // === Multer Config for Users ===
-const multerStorage = multer.memoryStorage(); // keep in memory for sharp
+const multerStorage = multer.memoryStorage(); // keep file in memory for Cloudinary
 const multerFilter = (req, file, cb) => {
   if (file.mimetype.startsWith("image/")) {
     cb(null, true);
@@ -23,33 +21,34 @@ const upload = multer({
   storage: multerStorage,
   fileFilter: multerFilter,
   limits: {
-    fileSize: 2 * 1024 * 1024, // 2MB per photo (profile pic usually small)
+    fileSize: 2 * 1024 * 1024, // 2MB per photo
   },
 });
 
 // Middleware to accept single file under "photo" field
 exports.uploadUserPhoto = upload.single("photo");
 
-// Ensure user photo dir exists
-const USER_IMG_DIR = path.join(__dirname, "..", "public", "img", "users");
-if (!fs.existsSync(USER_IMG_DIR))
-  fs.mkdirSync(USER_IMG_DIR, { recursive: true });
-
-// Resize + Save
+// Upload to Cloudinary
 exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
   if (!req.file) return next();
 
-  const filename = `user-${req.user.id}-${Date.now()}.jpeg`;
-  const outputPath = path.join(USER_IMG_DIR, filename);
+  const uploadResult = await new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      {
+        folder: "users",
+        format: "jpeg",
+        transformation: [{ width: 500, height: 500, crop: "fill" }],
+      },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result);
+      }
+    );
+    stream.end(req.file.buffer);
+  });
 
-  await sharp(req.file.buffer)
-    .resize(500, 500) // square crop for profile pic
-    .toFormat("jpeg")
-    .jpeg({ quality: 90 })
-    .toFile(outputPath);
-
-  // Attach filename to req.body so updateMe can use it
-  req.body.photo = `/img/users/${filename}`;
+  // Attach secure URL to req.body so it gets saved in DB
+  req.body.photo = uploadResult.secure_url;
 
   next();
 });
@@ -64,12 +63,10 @@ const filterObject = (obj, ...allowedFields) => {
 
 exports.getMe = (req, res, next) => {
   req.params.id = req.user.id;
-
   next();
 };
 
 exports.updateMe = catchAsync(async (req, res, next) => {
-  // 1) Error if trying to update password
   if (req.body.password || req.body.passwordConfirm) {
     return next(
       new AppError(
@@ -79,7 +76,6 @@ exports.updateMe = catchAsync(async (req, res, next) => {
     );
   }
 
-  // 2) Filtered out unwanted fields names
   const filteredBody = filterObject(
     req.body,
     "firstName",
@@ -89,7 +85,6 @@ exports.updateMe = catchAsync(async (req, res, next) => {
     "photo"
   );
 
-  // 3) Update user document
   const updatedUser = await User.findByIdAndUpdate(req.user._id, filteredBody, {
     new: true,
     runValidators: true,
@@ -101,7 +96,6 @@ exports.updateMe = catchAsync(async (req, res, next) => {
   });
 });
 
-// This route is for ADMIN/TEACHER role to create a student accounts
 exports.createUser = catchAsync(async (req, res, next) => {
   const {
     firstName,
@@ -113,15 +107,12 @@ exports.createUser = catchAsync(async (req, res, next) => {
     passwordConfirm,
   } = req.body;
 
-  // because i created a hash mongoose middleware and i want to send a unhash password to email
   const defaultPasswordForEmail = password;
 
-  // Basic validation
   if (!email || !password || !firstName || !lastName) {
     return next(new AppError("Please provide all required user details.", 400));
   }
 
-  // Create the user
   const newUser = await User.create({
     firstName,
     lastName,
@@ -132,14 +123,12 @@ exports.createUser = catchAsync(async (req, res, next) => {
     role: role || "student",
   });
 
-  // const url = `${req.protocol}://${req.get("host")}api/v1/user/login`;
-  const url = "https://pass-college.netlify.app/"; // for dev || testing
+  const url = "https://pass-college.netlify.app/";
   await new Email(newUser, url).sendWelcome(
     newUser.email,
     defaultPasswordForEmail
   );
 
-  // Remove password from output before sending response
   newUser.password = undefined;
 
   res.status(201).json({
@@ -153,7 +142,5 @@ exports.createUser = catchAsync(async (req, res, next) => {
 
 exports.getAllUser = factory.getAll(User);
 exports.getOneUser = factory.getOne(User);
-
-//Do NOT update password with this | because of findById Querry in factory
 exports.updateUser = factory.updateOne(User);
 exports.deleteUser = factory.deleteOne(User);
