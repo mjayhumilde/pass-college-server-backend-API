@@ -8,6 +8,8 @@ const AppError = require("./utils/appError");
 const postRouter = require("./routes/postRoute");
 const documentRouter = require("./routes/documentRoute");
 const userRouter = require("./routes/userRoute");
+const commentRouter = require("./routes/commentRoute");
+const likeRouter = require("./routes/likeRoute");
 
 // START EXPRESS APP
 const app = express();
@@ -30,6 +32,8 @@ if (process.env.NODE_ENV === "development") {
 app.use("/api/v1/post", postRouter);
 app.use("/api/v1/document", documentRouter);
 app.use("/api/v1/user", userRouter);
+app.use("/api/v1/comment", commentRouter);
+app.use("/api/v1/like", likeRouter);
 
 // default route
 app.get("/", (req, res) => {
