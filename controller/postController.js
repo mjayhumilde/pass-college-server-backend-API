@@ -2,6 +2,8 @@ const crypto = require("crypto");
 const multer = require("multer");
 
 const Post = require("../model/postModel");
+const Like = require("../model/likeModel");
+const Comment = require("../model/commentModel");
 const factory = require("../controller/handlerFactory");
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
@@ -78,7 +80,24 @@ exports.getAllPost = catchAsync(async (req, res, next) => {
     .limitFields()
     .paginate();
 
-  const posts = await features.query;
+  let posts = await features.query;
+
+  posts = await Promise.all(
+    posts.map(async (post) => {
+      const likeCount = await Like.countDocuments({ post: post._id });
+
+      const latestComments = await Comment.find({ post: post._id })
+        .sort("-createdAt")
+        .limit(3)
+        .populate("user", "firstName lastName photo course");
+
+      return {
+        ...post.toObject(),
+        likeCount,
+        latestComments,
+      };
+    })
+  );
 
   res.status(200).json({
     status: "success",
@@ -87,8 +106,32 @@ exports.getAllPost = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.getPost = catchAsync(async (req, res, next) => {
+  const post = await Post.findById(req.params.id);
+  if (!post) {
+    return next(new AppError("No post found with that ID", 404));
+  }
+
+  const likeCount = await Like.countDocuments({ post: post._id });
+
+  const comments = await Comment.find({ post: post._id })
+    .sort("-createdAt")
+    .limit(3)
+    .populate("user", "firstName lastName photo course");
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      post: {
+        ...post.toObject(),
+        likeCount,
+        comments,
+      },
+    },
+  });
+});
+
 // CRUD (factory pattern)
 exports.createPost = factory.createOne(Post);
 exports.deletePost = factory.deleteOne(Post);
 exports.updatePost = factory.updateOne(Post);
-exports.getPost = factory.getOne(Post);
