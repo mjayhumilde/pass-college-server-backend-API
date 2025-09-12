@@ -1,17 +1,19 @@
 const express = require("express");
 const router = express.Router();
-
 const likeController = require("../controller/likeController");
 const authController = require("../controller/authController");
+
+// Protect all routes after this
+router.use(authController.protect);
 
 router
   .route("/")
   .get(likeController.getAllLikes)
-  .post(authController.protect, likeController.createLike);
+  .post(likeController.createLike);
 
 router
   .route("/:id")
   .get(likeController.getOneLike)
-  .delete(authController.protect, likeController.deleteLike);
+  .delete(likeController.deleteLike);
 
 module.exports = router;
