@@ -10,6 +10,7 @@ const documentRouter = require("./routes/documentRoute");
 const userRouter = require("./routes/userRoute");
 const commentRouter = require("./routes/commentRoute");
 const likeRouter = require("./routes/likeRoute");
+const notificatonRouter = require("./routes/notificationRoute");
 
 // START EXPRESS APP
 const app = express();
@@ -34,6 +35,7 @@ app.use("/api/v1/document", documentRouter);
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/comment", commentRouter);
 app.use("/api/v1/like", likeRouter);
+app.use("/api/v1/notification", notificatonRouter);
 
 // default route
 app.get("/", (req, res) => {
