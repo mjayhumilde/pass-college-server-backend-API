@@ -4,6 +4,8 @@ const multer = require("multer");
 const Post = require("../model/postModel");
 const Like = require("../model/likeModel");
 const Comment = require("../model/commentModel");
+const Notification = require("../model/notificationModel");
+const User = require("../model/userModel");
 const factory = require("../controller/handlerFactory");
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
@@ -131,7 +133,33 @@ exports.getPost = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.createPost = catchAsync(async (req, res, next) => {
+  const post = await Post.create(req.body);
+
+  //filter users based on role
+  const students = await User.find({ role: "student" }).select("_id");
+
+  //create notification
+  const notifications = students.map((student) => ({
+    title: `New ${post.postType} posted`,
+    description: post.description.substring(0, 100) + "...",
+    postType: post.postType,
+    user: student._id,
+    relatedPost: post._id,
+  }));
+
+  if (notifications.length > 0) {
+    await Notification.insertMany(notifications);
+  }
+
+  res.status(201).json({
+    status: "success",
+    data: {
+      post,
+    },
+  });
+});
+
 // CRUD (factory pattern)
-exports.createPost = factory.createOne(Post);
 exports.deletePost = factory.deleteOne(Post);
 exports.updatePost = factory.updateOne(Post);
