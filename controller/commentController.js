@@ -13,7 +13,7 @@ exports.filterCommentsByPost = (req, res, next) => {
 
 exports.getAllComments = catchAsync(async (req, res, next) => {
   const comments = await Comment.find(req.filter)
-    .populate("user", "firstName lastName course photo")
+    .populate("user", "firstName lastName course photo role")
     .populate("parentComment", "text user"); // optional show parent comment
 
   res.status(200).json({
@@ -25,7 +25,7 @@ exports.getAllComments = catchAsync(async (req, res, next) => {
 
 exports.getOneComment = catchAsync(async (req, res, next) => {
   const comment = await Comment.findById(req.params.id)
-    .populate("user", "firstName lastName course photo")
+    .populate("user", "firstName lastName course photo role")
     .populate("parentComment", "text user");
 
   if (!comment) return next(new AppError("Comment not found", 404));
