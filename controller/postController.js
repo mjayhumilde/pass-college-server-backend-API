@@ -136,15 +136,16 @@ exports.getPost = catchAsync(async (req, res, next) => {
 exports.createPost = catchAsync(async (req, res, next) => {
   const post = await Post.create(req.body);
 
-  //filter users based on role
-  const students = await User.find({ role: "student" }).select("_id");
+  const recipients = await User.find({
+    role: { $in: ["student", "teacher"] },
+  }).select("_id");
 
-  //create notification
-  const notifications = students.map((student) => ({
+  // create notifications for each recipient
+  const notifications = recipients.map((user) => ({
     title: `New ${post.postType} posted`,
     description: post.description.substring(0, 100) + "...",
     postType: post.postType,
-    user: student._id,
+    user: user._id,
     relatedPost: post._id,
   }));
 
