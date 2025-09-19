@@ -25,7 +25,7 @@ router.patch(
 );
 
 //Restrict all routes after this middleware
-router.use(authController.restrictTo("teacher", "admin"));
+router.use(authController.restrictTo("registrar", "admin"));
 
 router
   .route("/")

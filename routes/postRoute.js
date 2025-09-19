@@ -9,7 +9,7 @@ router
   .get(authController.checkIfUserExist, postController.getAllPost)
   .post(
     authController.protect,
-    authController.restrictTo("teacher", "admin"),
+    authController.restrictTo("registrar", "admin"),
     postController.uploadPostImages,
     postController.resizePostImages,
     postController.createPost
@@ -19,14 +19,14 @@ router
   .get(postController.getPost)
   .patch(
     authController.protect,
-    authController.restrictTo("teacher", "admin"),
+    authController.restrictTo("registrar", "admin"),
     postController.uploadPostImages,
     postController.resizePostImages,
     postController.updatePost
   )
   .delete(
     authController.protect,
-    authController.restrictTo("teacher", "admin"),
+    authController.restrictTo("registrar", "admin"),
     postController.deletePost
   );
 
