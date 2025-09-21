@@ -1,4 +1,7 @@
 const Comment = require("../model/commentModel");
+const Notification = require("../model/notificationModel");
+const User = require("../model/userModel");
+const Post = require("../model/postModel");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 
@@ -36,7 +39,6 @@ exports.getOneComment = catchAsync(async (req, res, next) => {
 exports.createComment = catchAsync(async (req, res, next) => {
   req.body.user = req.user.id;
 
-  // Optional ensure parentComment belongs to same post
   if (req.body.parentComment) {
     const parent = await Comment.findById(req.body.parentComment);
     if (!parent)
@@ -48,6 +50,43 @@ exports.createComment = catchAsync(async (req, res, next) => {
   }
 
   const comment = await Comment.create(req.body);
+
+  // Notify all registrars
+  const registrars = await User.find({ role: "registrar" }).select("_id");
+
+  if (registrars.length > 0) {
+    const post = await Post.findById(req.body.post).select("title postType");
+
+    const registrarNotifs = registrars.map((registrar) => ({
+      title: `New comment on ${post?.title || "a post"}`,
+      description: comment.text.substring(0, 100) + "...",
+      postType: post?.postType || "announcement",
+      user: registrar._id,
+      relatedPost: req.body.post,
+    }));
+
+    await Notification.insertMany(registrarNotifs);
+  }
+
+  // Notify parent comment owner (if reply)
+  if (req.body.parentComment) {
+    const parent = await Comment.findById(req.body.parentComment).populate(
+      "user",
+      "_id"
+    );
+
+    if (parent && parent.user._id.toString() !== req.user.id) {
+      const post = await Post.findById(req.body.post).select("title postType");
+
+      await Notification.create({
+        title: `New reply to your comment on ${post?.title || "a post"}`,
+        description: comment.text.substring(0, 100) + "...",
+        postType: post?.postType || "announcement",
+        user: parent.user._id, // send only to the comment owner
+        relatedPost: req.body.post,
+      });
+    }
+  }
 
   res.status(201).json({ status: "success", data: { comment } });
 });
