@@ -51,21 +51,23 @@ exports.createComment = catchAsync(async (req, res, next) => {
 
   const comment = await Comment.create(req.body);
 
-  // Notify all registrars
-  const registrars = await User.find({ role: "registrar" }).select("_id");
+  // Notify all registrars only if the commenter is NOT registrar
+  if (req.user.role !== "registrar") {
+    const registrars = await User.find({ role: "registrar" }).select("_id");
 
-  if (registrars.length > 0) {
-    const post = await Post.findById(req.body.post).select("title postType");
+    if (registrars.length > 0) {
+      const post = await Post.findById(req.body.post).select("title postType");
 
-    const registrarNotifs = registrars.map((registrar) => ({
-      title: `New comment on ${post?.title || "a post"}`,
-      description: comment.text.substring(0, 100) + "...",
-      postType: post?.postType || "announcement",
-      user: registrar._id,
-      relatedPost: req.body.post,
-    }));
+      const registrarNotifs = registrars.map((registrar) => ({
+        title: `New comment on ${post?.title || "a post"}`,
+        description: comment.text.substring(0, 100) + "...",
+        postType: post?.postType || "announcement",
+        user: registrar._id,
+        relatedPost: req.body.post,
+      }));
 
-    await Notification.insertMany(registrarNotifs);
+      await Notification.insertMany(registrarNotifs);
+    }
   }
 
   // Notify parent comment owner (if reply)

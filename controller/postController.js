@@ -134,13 +134,14 @@ exports.getPost = catchAsync(async (req, res, next) => {
 });
 
 exports.createPost = catchAsync(async (req, res, next) => {
+  req.body.user = req.user.id;
   const post = await Post.create(req.body);
 
   const recipients = await User.find({
     role: { $in: ["student", "teacher"] },
+    _id: { $ne: req.user.id }, // exclude the post creator
   }).select("_id");
 
-  // create notifications for each recipient
   const notifications = recipients.map((user) => ({
     title: `New ${post.postType} posted`,
     description: post.description.substring(0, 100) + "...",
@@ -155,9 +156,7 @@ exports.createPost = catchAsync(async (req, res, next) => {
 
   res.status(201).json({
     status: "success",
-    data: {
-      post,
-    },
+    data: { post },
   });
 });
 
