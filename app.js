@@ -11,6 +11,7 @@ const userRouter = require("./routes/userRoute");
 const commentRouter = require("./routes/commentRoute");
 const likeRouter = require("./routes/likeRoute");
 const notificatonRouter = require("./routes/notificationRoute");
+const accountRequestRouter = require("./routes/accountRequestRoute");
 
 // START EXPRESS APP
 const app = express();
@@ -36,6 +37,7 @@ app.use("/api/v1/user", userRouter);
 app.use("/api/v1/comment", commentRouter);
 app.use("/api/v1/like", likeRouter);
 app.use("/api/v1/notification", notificatonRouter);
+app.use("/api/v1/account-request", accountRequestRouter);
 
 // default route
 app.get("/", (req, res) => {
