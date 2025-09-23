@@ -81,11 +81,21 @@ exports.createAccountRequest = catchAsync(async (req, res, next) => {
   });
 });
 
-exports.getPendingRequests = catchAsync(async (req, res, next) => {
-  const requests = await AccountRequest.find({ status: "pending" });
-  res
-    .status(200)
-    .json({ status: "success", results: requests.length, data: { requests } });
+exports.getAllRequests = catchAsync(async (req, res, next) => {
+  const queryObj = { ...req.query };
+
+  let query = AccountRequest.find(queryObj).populate(
+    "reviewedBy",
+    "firstName lastName email role"
+  );
+
+  const requests = await query;
+
+  res.status(200).json({
+    status: "success",
+    results: requests.length,
+    data: { requests },
+  });
 });
 
 exports.approveRequest = catchAsync(async (req, res, next) => {

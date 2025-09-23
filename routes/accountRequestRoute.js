@@ -18,7 +18,7 @@ router.use(
   authController.restrictTo("registrar", "admin")
 );
 
-router.get("/", accountRequestController.getPendingRequests);
+router.get("/", accountRequestController.getAllRequests);
 router.patch("/:id/approve", accountRequestController.approveRequest);
 router.patch("/:id/reject", accountRequestController.rejectRequest);
 router.patch(
