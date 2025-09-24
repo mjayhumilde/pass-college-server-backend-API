@@ -15,7 +15,11 @@ const userSchema = new mongoose.Schema(
     },
     course: {
       type: String,
-      enum: ["BSCS", "BSA", "BSBA", "BSHM", "BSTM", "BSCRIM", "BEED"],
+      enum: ["BSCS", "BSA", "BSBA", "BSHM", "BSTM", "BSCRIM", "BEED", "none"],
+      required: function () {
+        return this.role === "student"; // only required for students
+      },
+      default: "none",
     },
     email: {
       type: String,

@@ -66,10 +66,12 @@ exports.createAccountRequest = catchAsync(async (req, res, next) => {
     return next(new AppError(message, 400));
   }
 
+  const finalCourse = role === "student" ? course : "none";
+
   const request = await AccountRequest.create({
     firstName,
     lastName,
-    course,
+    course: finalCourse,
     email,
     role: role || "student",
     registrationFormImages: req.body.registrationFormImages,
@@ -118,10 +120,10 @@ exports.approveRequest = catchAsync(async (req, res, next) => {
     firstName: request.firstName,
     lastName: request.lastName,
     email: request.email,
-    course: request.course,
+    course: request.role === "student" ? request.course : "none",
     password: defaultPassword,
     passwordConfirm: defaultPassword,
-    role: "student",
+    role: request.role || "student",
   });
 
   request.status = "approved";
@@ -204,7 +206,7 @@ exports.overrideRejectedRequest = catchAsync(async (req, res, next) => {
     firstName: request.firstName,
     lastName: request.lastName,
     email: request.email,
-    course: request.course,
+    course: request.role === "student" ? request.course : "none",
     password: defaultPassword,
     passwordConfirm: defaultPassword,
     role: "student",

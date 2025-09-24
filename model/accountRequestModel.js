@@ -7,8 +7,11 @@ const accountRequestSchema = new mongoose.Schema(
     lastName: { type: String, required: [true, "Last name is required"] },
     course: {
       type: String,
-      enum: ["BSCS", "BSA", "BSBA", "BSHM", "BSTM", "BSCRIM", "BEED"],
-      required: [true, "Course is required"],
+      enum: ["BSCS", "BSA", "BSBA", "BSHM", "BSTM", "BSCRIM", "BEED", "none"],
+      required: function () {
+        return this.role === "student"; // only required for students
+      },
+      default: "none",
     },
     email: {
       type: String,
@@ -23,7 +26,7 @@ const accountRequestSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["student", "registrar", "admin"],
+      enum: ["student", "registrar", "admin", "teacher"],
       default: "student",
     },
     status: {
