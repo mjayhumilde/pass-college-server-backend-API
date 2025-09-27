@@ -8,7 +8,8 @@ process.on("uncaughtException", (err) => {
   process.exit(1);
 });
 
-dotenv.config({ path: "./config.env" });
+dotenv.config({ path: "./.env" });
+dotenv.config({ path: "./config.env" }); // overrides with config.env if present
 
 const app = require("./app"); // Import the Express app from app.js
 
