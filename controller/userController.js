@@ -142,7 +142,7 @@ exports.createUser = catchAsync(async (req, res, next) => {
 
 // Get all deactivated users
 exports.getAllDeactivatedUsers = catchAsync(async (req, res, next) => {
-  const deactivatedUsers = await User.findWithInactive({ active: false });
+  const deactivatedUsers = await User.findAllWithInactive({ active: false });
 
   res.status(200).json({
     status: "success",

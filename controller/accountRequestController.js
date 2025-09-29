@@ -49,7 +49,20 @@ exports.uploadToCloudinary = async (req, res, next) => {
 exports.createAccountRequest = catchAsync(async (req, res, next) => {
   const { firstName, lastName, course, email, role } = req.body;
 
-  // Check if there's already a request for this email
+  //Check if email is a deactivated account
+  const existingUser = await User.findOneWithInactive({ email }).select(
+    "+active"
+  );
+  if (existingUser && existingUser.active === false) {
+    return next(
+      new AppError(
+        "This email belongs to a deactivated account. Please go to the Registrar Office for explanation/reason to reactivate your account.",
+        400
+      )
+    );
+  }
+
+  //  Check if there's already a request for this email
   const existingRequest = await AccountRequest.findOne({ email });
   if (existingRequest) {
     let message = "An account request with this email already exists.";
@@ -156,6 +169,19 @@ exports.checkRequestStatus = catchAsync(async (req, res, next) => {
   const { email } = req.body;
 
   if (!email) return next(new AppError("Email is required", 400));
+
+  // Check if email belongs to a deactivated account
+  const existingUser = await User.findOneWithInactive({ email }).select(
+    "+active"
+  );
+  if (existingUser && existingUser.active === false) {
+    return next(
+      new AppError(
+        "This email belongs to a deactivated account. Please go to the Registrar Office for explanation/reason to reactivate your account.",
+        400
+      )
+    );
+  }
 
   const request = await AccountRequest.findOne({ email }).select(
     "status rejectionReason createdAt updatedAt"

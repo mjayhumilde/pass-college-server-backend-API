@@ -88,16 +88,21 @@ userSchema.pre("save", function (next) {
 });
 
 //Query Midlewawre
-userSchema.statics.findWithInactive = function (filter = {}) {
-  return this.find(filter).setOptions({ skipMiddleware: true });
-};
-
 userSchema.pre(/^find/, function (next) {
   if (!this.getOptions().skipMiddleware) {
     this.find({ active: { $ne: false } });
   }
   next();
 });
+
+//Static methods
+userSchema.statics.findOneWithInactive = function (filter) {
+  return this.findOne(filter).setOptions({ skipMiddleware: true });
+};
+
+userSchema.statics.findAllWithInactive = function (filter = {}) {
+  return this.find(filter).setOptions({ skipMiddleware: true });
+};
 
 //INSTANCE METHOD
 userSchema.methods.correctPassword = async function (
