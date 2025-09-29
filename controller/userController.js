@@ -140,6 +140,51 @@ exports.createUser = catchAsync(async (req, res, next) => {
   });
 });
 
+// Get all deactivated users
+exports.getAllDeactivatedUsers = catchAsync(async (req, res, next) => {
+  const deactivatedUsers = await User.findWithInactive({ active: false });
+
+  res.status(200).json({
+    status: "success",
+    results: deactivatedUsers.length,
+    data: {
+      users: deactivatedUsers,
+    },
+  });
+});
+
+// Deactivate user
+exports.deactivateUser = catchAsync(async (req, res, next) => {
+  const user = await User.findByIdAndUpdate(
+    req.params.id,
+    { active: false },
+    { new: true, runValidators: true }
+  );
+
+  if (!user) return next(new AppError("No user found with that ID", 404));
+
+  res.status(200).json({
+    status: "success",
+    message: "User deactivated successfully",
+  });
+});
+
+// Reactivate user
+exports.reactivateUser = catchAsync(async (req, res, next) => {
+  const user = await User.findByIdAndUpdate(
+    req.params.id,
+    { active: true },
+    { new: true, runValidators: true, skipMiddleware: true } //  bypass middleware
+  );
+
+  if (!user) return next(new AppError("No user found with that ID", 404));
+
+  res.status(200).json({
+    status: "success",
+    message: "User reactivated successfully",
+  });
+});
+
 exports.getAllUser = factory.getAll(User);
 exports.getOneUser = factory.getOne(User);
 exports.updateUser = factory.updateOne(User);

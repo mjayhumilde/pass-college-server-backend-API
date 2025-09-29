@@ -56,6 +56,11 @@ const userSchema = new mongoose.Schema(
     passwordChangedAt: { type: Date },
     passwordResetToken: String,
     passwordResetExpires: { type: Date },
+    active: {
+      type: Boolean,
+      default: true,
+      select: false, // hide from API responses
+    },
   },
   {
     timestamps: true,
@@ -79,6 +84,18 @@ userSchema.pre("save", function (next) {
   if (!this.isModified("password") || this.isNew) return next();
 
   this.passwordChangedAt = Date.now() - 1000; //sometimes saving have delays
+  next();
+});
+
+//Query Midlewawre
+userSchema.statics.findWithInactive = function (filter = {}) {
+  return this.find(filter).setOptions({ skipMiddleware: true });
+};
+
+userSchema.pre(/^find/, function (next) {
+  if (!this.getOptions().skipMiddleware) {
+    this.find({ active: { $ne: false } });
+  }
   next();
 });
 

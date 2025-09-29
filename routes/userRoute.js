@@ -11,12 +11,11 @@ router.get("/logout", authController.logout);
 router.post("/forgotPassword", authController.forgotPassword);
 router.patch("/resetPassword/:token", authController.resetPassword);
 
-//Protect all routes after this middleware
 router.use(authController.protect);
 
 router.patch("/updateMyPassword", authController.updatePassword);
 router.get("/me", userController.getMe, userController.getOneUser);
-// router.delete('/deleteMe', userController.deleteMe); // not needed here as of now
+
 router.patch(
   "/updateMe",
   userController.uploadUserPhoto,
@@ -24,7 +23,7 @@ router.patch(
   userController.updateMe
 );
 
-//Restrict all routes after this middleware
+// Restrict all routes after this middleware
 router.use(authController.restrictTo("registrar", "admin"));
 
 router
@@ -32,10 +31,16 @@ router
   .get(userController.getAllUser)
   .post(userController.createUser);
 
+router.get("/deactivated", userController.getAllDeactivatedUsers);
+
 router
   .route("/:id")
   .get(userController.getOneUser)
   .patch(userController.updateUser)
   .delete(userController.deleteUser);
+
+// Soft deactivate / reactivate
+router.patch("/:id/deactivate", userController.deactivateUser);
+router.patch("/:id/reactivate", userController.reactivateUser);
 
 module.exports = router;
