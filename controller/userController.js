@@ -113,6 +113,12 @@ exports.createUser = catchAsync(async (req, res, next) => {
     return next(new AppError("Please provide all required user details.", 400));
   }
 
+  if (req.user.role === "registrar" && req.body.role !== "student") {
+    return next(
+      new AppError("Registrars can only create student accounts", 403)
+    );
+  }
+
   const newUser = await User.create({
     firstName,
     lastName,
