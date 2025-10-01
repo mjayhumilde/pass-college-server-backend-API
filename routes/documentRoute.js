@@ -1,17 +1,39 @@
 const express = require("express");
 const router = express.Router();
-
+const authController = require("../controller/authController");
 const documentController = require("../controller/documentController");
+
+router.use(authController.protect);
 
 router
   .route("/")
-  .get(documentController.getAllDocuments)
-  .post(documentController.createDocument);
+  .get(
+    authController.restrictTo("admin", "registrar"),
+    documentController.getAllDocuments
+  )
+  .post(
+    authController.restrictTo("student"),
+    documentController.createDocument
+  );
 
-router
-  .route("/:id")
-  .get(documentController.getOneDocument)
-  .patch(documentController.updateDocument)
-  .delete(documentController.deleteDocument);
+router.get(
+  "/my-request",
+  authController.restrictTo("student"),
+  documentController.getMyDocuments
+);
+
+router.delete(
+  "/my-request/:id",
+  authController.restrictTo("student"),
+  documentController.deleteMyDocument
+);
+
+router.patch(
+  "/:id/status",
+  authController.restrictTo("admin", "registrar"),
+  documentController.updateDocumentStatus
+);
+
+router.use("/:id", documentController.restrictStudentUpdateDelete);
 
 module.exports = router;
