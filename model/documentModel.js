@@ -34,5 +34,15 @@ const documentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+//query middleware
+documentSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: "requestedBy",
+    select: "firstName lastName email role photo course",
+  });
+
+  next();
+});
+
 const Document = mongoose.model("Document", documentSchema);
 module.exports = Document;
