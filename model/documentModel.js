@@ -7,10 +7,10 @@ const documentSchema = new mongoose.Schema(
       required: [true, "A document request must have a type"],
       trim: true,
       index: true,
-      // add enum later
     },
     documentStatus: {
       type: String,
+      default: "pending",
       enum: [
         "pending",
         "processing",
@@ -18,8 +18,11 @@ const documentSchema = new mongoose.Schema(
         "completed",
         "cancelled",
       ],
-      default: "pending",
       index: true,
+    },
+    cancelReason: {
+      type: String,
+      default: null,
     },
     requestedBy: {
       type: mongoose.Schema.Types.ObjectId,
