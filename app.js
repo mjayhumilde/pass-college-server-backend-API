@@ -13,6 +13,7 @@ const likeRouter = require("./routes/likeRoute");
 const notificatonRouter = require("./routes/notificationRoute");
 const accountRequestRouter = require("./routes/accountRequestRoute");
 const knowledgeRouter = require("./routes/knowledgeRoute");
+const documentReportRouter = require("./routes/documentReportRoute");
 
 // START EXPRESS APP
 const app = express();
@@ -40,6 +41,7 @@ app.use("/api/v1/like", likeRouter);
 app.use("/api/v1/notification", notificatonRouter);
 app.use("/api/v1/account-request", accountRequestRouter);
 app.use("/api/v1/knowledge", knowledgeRouter);
+app.use("/api/v1/document-report", documentReportRouter);
 
 // default route
 app.get("/", (req, res) => {
