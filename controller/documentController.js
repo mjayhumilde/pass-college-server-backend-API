@@ -2,6 +2,7 @@ const Document = require("../model/documentModel");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const factory = require("./handlerFactory");
+const Email = require("../utils/Email");
 
 exports.restrictStudentUpdateDelete = catchAsync(async (req, res, next) => {
   if (req.user.role === "student") {
@@ -69,7 +70,11 @@ exports.deleteMyDocument = catchAsync(async (req, res, next) => {
 exports.updateDocumentStatus = catchAsync(async (req, res, next) => {
   const { status, cancelReason } = req.body;
 
-  const doc = await Document.findById(req.params.id);
+  const doc = await Document.findById(req.params.id).populate(
+    "requestedBy",
+    "firstName lastName email"
+  );
+
   if (!doc) {
     return next(new AppError("No document found with that ID", 404));
   }
@@ -126,6 +131,21 @@ exports.updateDocumentStatus = catchAsync(async (req, res, next) => {
 
     await doc.save();
 
+    // Send cancellation email
+    try {
+      const url = `https://pass-college.netlify.app/reqdocs`;
+
+      await new Email(doc.requestedBy, url).sendRequestCancelled(
+        doc.documentType,
+        cancelReason,
+        url
+      );
+
+      console.log("📨 Cancellation email sent to:", doc.requestedBy.email);
+    } catch (err) {
+      console.error("❌ Email Failed:", err);
+    }
+
     return res.status(200).json({
       status: "success",
       data: { doc },
@@ -141,6 +161,20 @@ exports.updateDocumentStatus = catchAsync(async (req, res, next) => {
 
   doc.documentStatus = status;
   await doc.save();
+
+  if (status === "ready-to-pickup") {
+    try {
+      const url = `https://pass-college.netlify.app/reqdocs`;
+
+      await new Email(doc.requestedBy, url).sendRequestApproved(
+        doc.documentType
+      );
+
+      console.log("📨 Ready-to-pickup email sent to:", doc.requestedBy.email);
+    } catch (err) {
+      console.error("❌ Email Failed:", err);
+    }
+  }
 
   res.status(200).json({
     status: "success",

@@ -100,4 +100,22 @@ module.exports = class Email {
       { token: resetToken }
     );
   }
+
+  async sendRequestApproved(documentType) {
+    await this.send(
+      "requestApproved",
+      "Your document request has been approved!",
+      {
+        documentType,
+      }
+    );
+  }
+
+  async sendRequestCancelled(documentType, cancelReason, url) {
+    await this.send(
+      "requestCancelled",
+      "Your document request has been cancelled",
+      { documentType, cancelReason, url }
+    );
+  }
 };

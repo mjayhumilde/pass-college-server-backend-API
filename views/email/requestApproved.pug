@@ -1,0 +1,26 @@
+extends baseEmail
+
+block content
+  p Hi #{firstName},
+
+  p Great news! 🎉 Your document request has been approved.
+
+  p
+    strong Document Type:
+    |  #{documentType}
+
+  p You may now proceed to the Registrar Office to claim your document.  
+
+  table.btn.btn-primary(role='presentation', border='0', cellpadding='0', cellspacing='0')
+    tbody
+      tr
+        td(align='left')
+          table(role='presentation', border='0', cellpadding='0', cellspacing='0')
+            tbody
+              tr
+                td
+                  a(href=`${url}`, target='_blank') View your Request
+
+  p If you have any questions or need further assistance, feel free to visit the Pass College Admin Office.
+
+  p - Pass College
