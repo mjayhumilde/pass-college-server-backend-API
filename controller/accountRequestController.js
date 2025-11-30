@@ -99,10 +99,9 @@ exports.createAccountRequest = catchAsync(async (req, res, next) => {
 exports.getAllRequests = catchAsync(async (req, res, next) => {
   const queryObj = { ...req.query };
 
-  let query = AccountRequest.find(queryObj).populate(
-    "reviewedBy",
-    "firstName lastName email role"
-  );
+  let query = AccountRequest.find(queryObj)
+    .populate("reviewedBy", "firstName lastName email role")
+    .sort({ createdAt: -1 }); // 🟢 NEWEST FIRST
 
   const requests = await query;
 
