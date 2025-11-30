@@ -11,6 +11,7 @@ const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 const APIFeatures = require("../utils/apiFeatures");
 const cloudinary = require("../utils/cloudinary");
+const Email = require("../utils/Email");
 
 // === Multer config ===
 const multerStorage = multer.memoryStorage();
@@ -152,6 +153,29 @@ exports.createPost = catchAsync(async (req, res, next) => {
 
   if (notifications.length > 0) {
     await Notification.insertMany(notifications);
+  }
+
+  //email notification
+  try {
+    const url = `https://pass-college.netlify.app/`;
+
+    // user details for email sending
+    const emailRecipients = await User.find({
+      role: { $in: ["student", "teacher"] },
+      _id: { $ne: req.user.id },
+    }).select("email firstName");
+
+    for (const user of emailRecipients) {
+      await new Email(user, url).sendNewPostCreated(
+        post.title,
+        post.postType,
+        url
+      );
+    }
+
+    console.log("📨 Post email sent to all users");
+  } catch (err) {
+    console.error("❌ Post Email Failed:", err);
   }
 
   res.status(201).json({

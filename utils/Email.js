@@ -118,4 +118,12 @@ module.exports = class Email {
       { documentType, cancelReason, url }
     );
   }
+
+  async sendNewPostCreated(postTitle, postType, url) {
+    await this.send("newPostCreated", `New ${postType} posted: ${postTitle}`, {
+      postTitle,
+      postType,
+      url,
+    });
+  }
 };
