@@ -182,9 +182,9 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
 
   // 3) send it as email
   try {
-    const resetURL = `${req.protocol}://${req.get(
-      "host"
-    )}/api/v1/user/resetPassword/${resetToken}`;
+    const resetURL = `https://pass-college.netlify.app/resetPassword/${resetToken}`;
+    // const resetURL = `http://localhost:5173/resetPassword/${resetToken}`; // for development
+    // const resetURL = `https://yourapp.com/resetPassword/${resetToken}`; // for production
 
     await new Email(user, resetURL).sendPasswordReset(resetToken);
 
