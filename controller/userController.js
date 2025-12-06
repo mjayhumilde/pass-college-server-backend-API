@@ -1,4 +1,5 @@
 const User = require("../model/userModel");
+const AccountRequest = require("../model/accountRequestModel");
 const factory = require("../controller/handlerFactory");
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
@@ -103,6 +104,7 @@ exports.createUser = catchAsync(async (req, res, next) => {
     email,
     password,
     role,
+    studentNumber,
     course,
     passwordConfirm,
   } = req.body;
@@ -144,7 +146,7 @@ exports.createUser = catchAsync(async (req, res, next) => {
     passwordConfirm,
     course,
     role: role || "student",
-    studentNumber: req.body.studentNumber,
+    studentNumber,
   });
 
   const url = "https://pass-college.netlify.app/";
@@ -195,13 +197,51 @@ exports.deactivateUser = catchAsync(async (req, res, next) => {
 
 // Reactivate user
 exports.reactivateUser = catchAsync(async (req, res, next) => {
-  const user = await User.findByIdAndUpdate(
+  // Find user normally (NO update yet, but bypass middleware)
+  const user = await User.findOneWithInactive({
+    _id: req.params.id,
+    active: false,
+  });
+
+  if (!user) return next(new AppError("User not found or already active", 404));
+
+  // Check if a pending request exists with same studentNumber
+  const pendingRequest = await AccountRequest.findOne({
+    studentNumber: user.studentNumber,
+    status: { $in: ["pending"] },
+  });
+
+  if (pendingRequest) {
+    return next(
+      new AppError(
+        "Cannot reactivate this account because a request with the same student number exists.",
+        400
+      )
+    );
+  }
+
+  //Check for another active user with same studentNumber
+  const duplicateActive = await User.findOneWithInactive({
+    studentNumber: user.studentNumber,
+    active: true,
+    _id: { $ne: user._id },
+  });
+
+  if (duplicateActive) {
+    return next(
+      new AppError(
+        "Cannot reactivate this account because another active user exists with the same student number.",
+        400
+      )
+    );
+  }
+
+  // Reactivate user
+  await User.findByIdAndUpdate(
     req.params.id,
     { active: true },
-    { new: true, runValidators: true, skipMiddleware: true } //  bypass middleware
+    { new: true, runValidators: true, skipMiddleware: true }
   );
-
-  if (!user) return next(new AppError("No user found with that ID", 404));
 
   res.status(200).json({
     status: "success",

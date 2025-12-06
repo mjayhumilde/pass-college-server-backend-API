@@ -56,7 +56,7 @@ exports.createAccountRequest = catchAsync(async (req, res, next) => {
   if (existingUser && existingUser.active === false) {
     return next(
       new AppError(
-        "This email belongs to a deactivated account. Please go to the Registrar Office for explanation/reason to reactivate your account.",
+        "This email belongs to a deactivated account. If this is you, please visit the Registrar Office immediately.",
         400
       )
     );
@@ -79,6 +79,40 @@ exports.createAccountRequest = catchAsync(async (req, res, next) => {
     return next(new AppError(message, 400));
   }
 
+  //  Check if there's a PENDING request with same studentNumber
+  if (role === "student" && req.body.studentNumber) {
+    const existingPending = await AccountRequest.findOne({
+      studentNumber: req.body.studentNumber,
+      status: "pending",
+    });
+
+    if (existingPending) {
+      return next(
+        new AppError(
+          "There is already a pending account request with this student number. If this is not you, please visit the Registrar Office immediately.",
+          400
+        )
+      );
+    }
+  }
+
+  // Check if studentNumber exists and belongs to an active user
+  if (role === "student" && req.body.studentNumber) {
+    const existingActive = await User.findOneWithInactive({
+      studentNumber: req.body.studentNumber,
+      active: true,
+    });
+
+    if (existingActive) {
+      return next(
+        new AppError(
+          "This student number already has an active account. If this is you, please visit the Registrar Office immediately.",
+          400
+        )
+      );
+    }
+  }
+
   const finalCourse = role === "student" ? course : "none";
 
   const request = await AccountRequest.create({
@@ -87,6 +121,7 @@ exports.createAccountRequest = catchAsync(async (req, res, next) => {
     course: finalCourse,
     email,
     role: role || "student",
+    studentNumber: req.body.studentNumber,
     registrationFormImages: req.body.registrationFormImages,
   });
 
@@ -132,6 +167,7 @@ exports.approveRequest = catchAsync(async (req, res, next) => {
     firstName: request.firstName,
     lastName: request.lastName,
     email: request.email,
+    studentNumber: request.studentNumber,
     course: request.role === "student" ? request.course : "none",
     password: defaultPassword,
     passwordConfirm: defaultPassword,
@@ -231,6 +267,7 @@ exports.overrideRejectedRequest = catchAsync(async (req, res, next) => {
     firstName: request.firstName,
     lastName: request.lastName,
     email: request.email,
+    studentNumber: request.studentNumber,
     course: request.role === "student" ? request.course : "none",
     password: defaultPassword,
     passwordConfirm: defaultPassword,

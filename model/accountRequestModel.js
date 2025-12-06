@@ -13,6 +13,14 @@ const accountRequestSchema = new mongoose.Schema(
       },
       default: "none",
     },
+    studentNumber: {
+      type: String,
+      required: function () {
+        // only required if the user is student
+        return this.role === "student";
+      },
+      trim: true,
+    },
     email: {
       type: String,
       required: [true, "Email is required"],
