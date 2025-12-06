@@ -163,16 +163,22 @@ exports.approveRequest = catchAsync(async (req, res, next) => {
 
   const defaultPassword = "test1234"; // or random generator
 
-  const user = await User.create({
+  const userPayload = {
     firstName: request.firstName,
     lastName: request.lastName,
     email: request.email,
-    studentNumber: request.studentNumber,
-    course: request.role === "student" ? request.course : "none",
     password: defaultPassword,
     passwordConfirm: defaultPassword,
-    role: request.role || "student",
-  });
+    role: request.role,
+    course: request.role === "student" ? request.course : "none",
+  };
+
+  // Add studentNumber ONLY for students
+  if (request.role === "student") {
+    userPayload.studentNumber = request.studentNumber;
+  }
+
+  const user = await User.create(userPayload);
 
   request.status = "approved";
   request.reviewedBy = req.user.id;
