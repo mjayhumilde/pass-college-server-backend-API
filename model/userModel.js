@@ -28,6 +28,14 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       validate: [validator.isEmail, "Please provide a valid email"], // custom validator using npm validate
     },
+    studentNumber: {
+      type: String,
+      required: function () {
+        return this.role === "student";
+      },
+      trim: true,
+    },
+
     role: {
       type: String,
       default: "student",
@@ -66,6 +74,9 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+// Unique student number ONLY for active accounts
+userSchema.index({ studentNumber: 1, active: 1 }, { unique: true });
 
 //Mongoose Middleware
 //password encryption

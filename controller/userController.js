@@ -119,6 +119,23 @@ exports.createUser = catchAsync(async (req, res, next) => {
     );
   }
 
+  // Check if studentNumber already has an ACTIVE account
+  if (req.body.role === "student") {
+    const existingActive = await User.findOneWithInactive({
+      studentNumber: req.body.studentNumber,
+      active: true,
+    });
+
+    if (existingActive) {
+      return next(
+        new AppError(
+          "This student number already has an active account. Please ask the registrar to deactivate it first.",
+          400
+        )
+      );
+    }
+  }
+
   const newUser = await User.create({
     firstName,
     lastName,
@@ -127,6 +144,7 @@ exports.createUser = catchAsync(async (req, res, next) => {
     passwordConfirm,
     course,
     role: role || "student",
+    studentNumber: req.body.studentNumber,
   });
 
   const url = "https://pass-college.netlify.app/";
