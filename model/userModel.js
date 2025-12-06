@@ -76,7 +76,13 @@ const userSchema = new mongoose.Schema(
 );
 
 // Unique student number ONLY for active accounts
-userSchema.index({ studentNumber: 1, active: 1 }, { unique: true });
+userSchema.index(
+  { studentNumber: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { active: true },
+  }
+);
 
 //Mongoose Middleware
 //password encryption
