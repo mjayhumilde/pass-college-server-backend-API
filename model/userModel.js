@@ -34,6 +34,7 @@ const userSchema = new mongoose.Schema(
         return this.role === "student";
       },
       trim: true,
+      default: undefined, // prevents auto-null
     },
 
     role: {

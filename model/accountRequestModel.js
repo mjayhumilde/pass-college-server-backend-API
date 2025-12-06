@@ -20,6 +20,7 @@ const accountRequestSchema = new mongoose.Schema(
         return this.role === "student";
       },
       trim: true,
+      default: undefined, // prevents auto-null
     },
     email: {
       type: String,
