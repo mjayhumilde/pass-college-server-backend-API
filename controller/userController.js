@@ -197,7 +197,6 @@ exports.deactivateUser = catchAsync(async (req, res, next) => {
 
 // Reactivate user
 exports.reactivateUser = catchAsync(async (req, res, next) => {
-  // Find user normally (NO update yet, but bypass middleware)
   const user = await User.findOneWithInactive({
     _id: req.params.id,
     active: false,
@@ -205,38 +204,41 @@ exports.reactivateUser = catchAsync(async (req, res, next) => {
 
   if (!user) return next(new AppError("User not found or already active", 404));
 
-  // Check if a pending request exists with same studentNumber
-  const pendingRequest = await AccountRequest.findOne({
-    studentNumber: user.studentNumber,
-    status: { $in: ["pending"] },
-  });
+  // ONLY validate student-specific rules if role === student
+  let pendingRequest = null;
+  let duplicateActive = null;
 
-  if (pendingRequest) {
-    return next(
-      new AppError(
-        "Cannot reactivate this account because a request with the same student number exists.",
-        400
-      )
-    );
+  if (user.role === "student" && user.studentNumber) {
+    pendingRequest = await AccountRequest.findOne({
+      studentNumber: user.studentNumber,
+      status: { $in: ["pending"] },
+    });
+
+    if (pendingRequest) {
+      return next(
+        new AppError(
+          "Cannot reactivate this account because a request with the same student number exists.",
+          400
+        )
+      );
+    }
+
+    duplicateActive = await User.findOneWithInactive({
+      studentNumber: user.studentNumber,
+      active: true,
+      _id: { $ne: user._id },
+    });
+
+    if (duplicateActive) {
+      return next(
+        new AppError(
+          "Cannot reactivate this account because another active user exists with the same student number.",
+          400
+        )
+      );
+    }
   }
 
-  //Check for another active user with same studentNumber
-  const duplicateActive = await User.findOneWithInactive({
-    studentNumber: user.studentNumber,
-    active: true,
-    _id: { $ne: user._id },
-  });
-
-  if (duplicateActive) {
-    return next(
-      new AppError(
-        "Cannot reactivate this account because another active user exists with the same student number.",
-        400
-      )
-    );
-  }
-
-  // Reactivate user
   await User.findByIdAndUpdate(
     req.params.id,
     { active: true },
