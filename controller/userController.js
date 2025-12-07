@@ -251,6 +251,41 @@ exports.reactivateUser = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.searchUsers = catchAsync(async (req, res, next) => {
+  const { q } = req.query;
+
+  if (!q || q.trim().length === 0) {
+    return res.status(200).json({
+      status: "success",
+      results: 0,
+      data: [],
+    });
+  }
+
+  const searchRegex = new RegExp(q, "i"); // case-insensitive search
+
+  const users = await User.find({
+    $and: [
+      {
+        $or: [
+          { firstName: searchRegex },
+          { lastName: searchRegex },
+          { email: searchRegex },
+        ],
+      },
+      { _id: { $ne: req.user.id } }, // Exclude current user
+    ],
+  })
+    .select("firstName lastName email role photo")
+    .limit(20);
+
+  res.status(200).json({
+    status: "success",
+    results: users.length,
+    data: users,
+  });
+});
+
 exports.getAllUser = factory.getAll(User);
 exports.getOneUser = factory.getOne(User);
 exports.updateUser = factory.updateOne(User);
