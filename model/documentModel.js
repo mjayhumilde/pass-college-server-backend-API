@@ -20,6 +20,21 @@ const documentSchema = new mongoose.Schema(
       ],
       index: true,
     },
+    requiresClearance: {
+      type: Boolean,
+      default: false,
+    },
+
+    clearanceStatus: {
+      type: String,
+      enum: ["none", "awaiting", "scheduled", "completed"],
+      default: "none",
+    },
+    assignedTeacher: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+
     cancelReason: {
       type: String,
       default: null,
