@@ -1,4 +1,5 @@
 const Document = require("../model/documentModel");
+const AvailableDocument = require("../model/availableDocumentModel");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const factory = require("./handlerFactory");
@@ -17,14 +18,40 @@ exports.restrictStudentUpdateDelete = catchAsync(async (req, res, next) => {
 });
 
 exports.createDocument = catchAsync(async (req, res, next) => {
+  const availableDoc = await AvailableDocument.findOne({
+    name: req.body.documentType,
+    active: true,
+  });
+
+  if (!availableDoc) {
+    return next(new AppError("Document type not available", 400));
+  }
+
   const doc = await Document.create({
-    ...req.body,
+    documentType: availableDoc.name,
+    requiresClearance: availableDoc.requiresClearance,
+    clearanceStatus: availableDoc.requiresClearance ? "awaiting" : "none",
+    assignedTeacher: availableDoc.assignedTeacher || null,
     requestedBy: req.user.id,
   });
 
   res.status(201).json({
     status: "success",
     data: { doc },
+  });
+});
+
+exports.getPendingClearanceRequests = catchAsync(async (req, res, next) => {
+  const docs = await Document.find({
+    requiresClearance: true,
+    clearanceStatus: "awaiting",
+    assignedTeacher: req.user.id,
+  });
+
+  res.status(200).json({
+    status: "success",
+    results: docs.length,
+    data: { docs },
   });
 });
 
