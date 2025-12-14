@@ -22,6 +22,12 @@ router.get(
   documentController.getMyDocuments
 );
 
+router.get(
+  "/clearance/pending",
+  authController.restrictTo("teacher"),
+  documentController.getPendingClearanceRequests
+);
+
 router.delete(
   "/my-request/:id",
   authController.restrictTo("student"),
