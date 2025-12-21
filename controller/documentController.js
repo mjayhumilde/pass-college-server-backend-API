@@ -108,6 +108,20 @@ exports.updateDocumentStatus = catchAsync(async (req, res, next) => {
 
   const currentStatus = doc.documentStatus;
 
+  // Block registrar progression if clearance is required but not completed
+  if (
+    doc.requiresClearance &&
+    doc.clearanceStatus !== "completed" &&
+    status !== "cancelled"
+  ) {
+    return next(
+      new AppError(
+        "This document requires clearance. Status can only be updated after clearance is completed.",
+        400
+      )
+    );
+  }
+
   // if already completed or cancelled block any updates
   if (currentStatus === "completed" || currentStatus === "cancelled") {
     return next(
