@@ -119,3 +119,53 @@ exports.rescheduleClearance = catchAsync(async (req, res, next) => {
     data: { meeting },
   });
 });
+
+exports.completeClearance = catchAsync(async (req, res, next) => {
+  const { documentId } = req.params;
+
+  const doc = await Document.findById(documentId);
+
+  if (!doc) {
+    return next(new AppError("Document request not found", 404));
+  }
+
+  if (!doc.requiresClearance) {
+    return next(new AppError("This document does not require clearance", 400));
+  }
+
+  if (doc.clearanceStatus !== "scheduled") {
+    return next(
+      new AppError("Clearance must be scheduled before completion", 400)
+    );
+  }
+
+  if (doc.assignedTeacher.toString() !== req.user.id) {
+    return next(new AppError("You are not assigned to this clearance", 403));
+  }
+
+  const meeting = await ClearanceMeeting.findOne({
+    document: documentId,
+  });
+
+  if (!meeting) {
+    return next(new AppError("Clearance meeting not found", 404));
+  }
+
+  if (Date.now() < meeting.meetingDate.getTime()) {
+    return next(
+      new AppError(
+        "Clearance cannot be completed before the scheduled meeting time",
+        400
+      )
+    );
+  }
+
+  // Mark clearance as completed
+  doc.clearanceStatus = "completed";
+  await doc.save();
+
+  res.status(200).json({
+    status: "success",
+    message: "Clearance successfully completed",
+  });
+});

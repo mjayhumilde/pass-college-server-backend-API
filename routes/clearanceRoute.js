@@ -23,4 +23,10 @@ router.patch(
   clearanceController.rescheduleClearance
 );
 
+router.patch(
+  "/:documentId/complete",
+  authController.restrictTo("teacher"),
+  clearanceController.completeClearance
+);
+
 module.exports = router;
