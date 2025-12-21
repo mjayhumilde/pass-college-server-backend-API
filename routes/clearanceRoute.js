@@ -17,4 +17,10 @@ router.get(
   clearanceController.getMyClearanceMeeting
 );
 
+router.patch(
+  "/:documentId/reschedule",
+  authController.restrictTo("teacher"),
+  clearanceController.rescheduleClearance
+);
+
 module.exports = router;
