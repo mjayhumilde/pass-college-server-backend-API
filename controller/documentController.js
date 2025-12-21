@@ -44,8 +44,8 @@ exports.createDocument = catchAsync(async (req, res, next) => {
 exports.getPendingClearanceRequests = catchAsync(async (req, res, next) => {
   const docs = await Document.find({
     requiresClearance: true,
-    clearanceStatus: "awaiting",
     assignedTeacher: req.user.id,
+    clearanceStatus: { $in: ["awaiting", "scheduled"] },
   });
 
   res.status(200).json({
