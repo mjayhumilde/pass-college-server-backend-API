@@ -1,5 +1,6 @@
 const Document = require("../model/documentModel");
 const AvailableDocument = require("../model/availableDocumentModel");
+const ClearanceMeeting = require("../model/clearanceMeetingModel")
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
 const factory = require("./handlerFactory");
@@ -48,10 +49,35 @@ exports.getPendingClearanceRequests = catchAsync(async (req, res, next) => {
     clearanceStatus: { $in: ["awaiting", "scheduled"] },
   });
 
+  const scheduledDocIds = docs
+    .filter((d) => d.clearanceStatus === "scheduled")
+    .map((d) => d._id.toString()); // convert to string safe comparison
+
+  // Fetch relevant meetings in one query
+  const meetings = await ClearanceMeeting.find({
+    document: { $in: scheduledDocIds },
+  }).select("document room meetingDate description");
+
+  const meetingMap = {};
+  meetings.forEach((m) => {
+    meetingMap[m.document.toString()] = {
+      _id: m._id,
+      room: m.room,
+      meetingDate: m.meetingDate,
+      description: m.description,
+    };
+  });
+
+  const docsWithMeetings = docs.map((doc) => {
+    const docJSON = doc.toJSON(); // toJSON() safer than toObject() with populate middleware
+    docJSON.clearanceMeeting = meetingMap[doc._id.toString()] || null;
+    return docJSON;
+  });
+
   res.status(200).json({
     status: "success",
-    results: docs.length,
-    data: { docs },
+    results: docsWithMeetings.length,
+    data: { docs: docsWithMeetings },
   });
 });
 

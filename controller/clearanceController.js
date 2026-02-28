@@ -54,9 +54,15 @@ exports.scheduleClearance = catchAsync(async (req, res, next) => {
 });
 
 exports.getMyClearanceMeeting = catchAsync(async (req, res, next) => {
-  const meeting = await ClearanceMeeting.findOne({
-    student: req.user.id,
-  })
+  const { documentId } = req.query;
+
+  const query = { student: req.user.id };
+  if (documentId) {
+    query.document = documentId;
+  }
+
+  const meeting = await ClearanceMeeting.findOne(query)
+    .sort("-createdAt")
     .populate("teacher", "firstName lastName email")
     .populate("document", "documentType");
 
