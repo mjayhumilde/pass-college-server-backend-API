@@ -14,40 +14,12 @@ module.exports = (io) => {
       console.log("User connected:", userId);
     });
 
-    // SEND PRIVATE MESSAGE
-    socket.on("private_message", async ({ senderId, receiverId, message }) => {
-      if (!senderId || !receiverId || !message) return;
+    // NO DB save || prevents duplicate message bug
+    socket.on("notify_receiver", ({ receiverId, message }) => {
+      if (!receiverId || !message) return;
 
-      // Save message DB
-      const newMessage = await Message.create({
-        sender: senderId,
-        receiver: receiverId,
-        message,
-      });
-
-      // Update convo preview
-      let convo = await Conversation.findOne({
-        participants: { $all: [senderId, receiverId] },
-      });
-
-      if (!convo) {
-        convo = await Conversation.create({
-          participants: [senderId, receiverId],
-        });
-      }
-
-      convo.lastMessage = message;
-      convo.lastMessageAt = Date.now();
-      await convo.save();
-
-      // Emit to receiver (if online)
-      const receiverSocket = onlineUsers.get(receiverId);
-      if (receiverSocket) {
-        io.to(receiverId).emit("new_message", newMessage);
-      }
-
-      // Emit to sender also (to update UI)
-      io.to(senderId).emit("message_sent", newMessage);
+      // Forward the already-saved message object to the receiver only
+      io.to(receiverId).emit("new_message", message);
     });
 
     // MARK MESSAGE AS READ
