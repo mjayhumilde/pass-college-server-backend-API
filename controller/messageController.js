@@ -49,9 +49,10 @@ exports.sendMessage = catchAsync(async (req, res, next) => {
     message,
   });
 
-  // Update conversation preview
+  // Update conversation preview + track who sent last (for unread indicator)
   convo.lastMessage = message;
   convo.lastMessageAt = Date.now();
+  convo.lastSenderId = senderId;
   await convo.save();
 
   res.status(201).json({
@@ -72,6 +73,15 @@ exports.getMessages = catchAsync(async (req, res, next) => {
     ],
   }).sort({ createdAt: 1 });
 
+  // Clear unread indicator
+  await Conversation.findOneAndUpdate(
+    {
+      participants: { $all: [userId, otherUserId] },
+      lastSenderId: { $ne: userId }, // only update if other user sent last
+    },
+    { lastSenderId: userId },
+  );
+
   res.status(200).json({
     status: "success",
     results: messages.length,
@@ -89,7 +99,7 @@ exports.markAsRead = catchAsync(async (req, res, next) => {
 
   if (message.receiver.toString() !== req.user.id) {
     return next(
-      new AppError("You can only mark your own received messages.", 403)
+      new AppError("You can only mark your own received messages.", 403),
     );
   }
 

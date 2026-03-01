@@ -16,8 +16,13 @@ const conversationSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    lastSenderId: {
+      type: mongoose.Schema.ObjectId,
+      ref: "User",
+      default: null,
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const Conversation = mongoose.model("Conversation", conversationSchema);
