@@ -48,7 +48,7 @@ module.exports = class Email {
               "Error sending email via Mailjet:",
               error.statusCode,
               error.message,
-              error.response ? error.response.body : error
+              error.response ? error.response.body : error,
             );
             return { success: false, error }; // Simulate Nodemailer error
           }
@@ -97,7 +97,7 @@ module.exports = class Email {
     await this.send(
       "passwordReset",
       "Your password reset token (valid for 5mins)",
-      { token: resetToken }
+      { token: resetToken },
     );
   }
 
@@ -107,7 +107,7 @@ module.exports = class Email {
       "Your document request has been approved!",
       {
         documentType,
-      }
+      },
     );
   }
 
@@ -115,7 +115,7 @@ module.exports = class Email {
     await this.send(
       "requestCancelled",
       "Your document request has been cancelled",
-      { documentType, cancelReason, url }
+      { documentType, cancelReason, url },
     );
   }
 
@@ -125,5 +125,8 @@ module.exports = class Email {
       postType,
       url,
     });
+  }
+  async sendNewsletter(subject, blocks, unsubscribeURL) {
+    await this.send("newsletter", subject, { blocks, unsubscribeURL });
   }
 };

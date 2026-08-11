@@ -17,6 +17,7 @@ const documentReportRouter = require("./routes/documentReportRoute");
 const messageRouter = require("./routes/messageRoute");
 const availableDocumentRouter = require("./routes/availableDocumentRoute");
 const clearanceRouter = require("./routes/clearanceRoute");
+const subscriberRouter = require("./routes/subscriberRoute");
 
 // START EXPRESS APP
 const app = express();
@@ -48,6 +49,7 @@ app.use("/api/v1/document-report", documentReportRouter);
 app.use("/api/v1/messages", messageRouter);
 app.use("/api/v1/available-documents", availableDocumentRouter);
 app.use("/api/v1/clearance", clearanceRouter);
+app.use("/api/v1/subscribers", subscriberRouter);
 
 // default route
 app.get("/", (req, res) => {
